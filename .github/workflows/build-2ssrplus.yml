@@ -38,10 +38,10 @@ jobs:
     runs-on: ubuntu-20.04
 
     steps:
-    - name: Checkout
+    - name: Checkout 签出工作区
       uses: actions/checkout@main
 
-    - name: Initialization environment
+    - name: Initialization environment 初始化编译环境
       env:
         DEBIAN_FRONTEND: noninteractive
       run: |
@@ -53,25 +53,25 @@ jobs:
         sudo timedatectl set-timezone "$TZ"
         sudo mkdir -p /workdir
         sudo chown $USER:$GROUPS /workdir
-    - name: Clone source code
+    - name: Clone source code 拉取源代码
       working-directory: /workdir
       run: |
         df -hT $PWD
         git clone $REPO_URL -b $REPO_BRANCH immortalwrt
         ln -sf /workdir/immortalwrt $GITHUB_WORKSPACE/immortalwrt
-    - name: Load custom feeds
+    - name: Load custom feeds 加载自定义feeds文件
       run: |
         [ -e $FEEDS_CONF ] && mv $FEEDS_CONF immortalwrt/feeds.conf.default
         chmod +x $DIY_P1_SH
         cd immortalwrt
         $GITHUB_WORKSPACE/$DIY_P1_SH
-    - name: Update feeds
+    - name: Update feeds 更新feeds中描述内容
       run: cd immortalwrt && ./scripts/feeds update -a
 
-    - name: Install feeds
+    - name: Install feeds 安装feeds中描述内容
       run: cd immortalwrt && ./scripts/feeds install -a
 
-    - name: Load custom configuration
+    - name: Load custom configuration 加载自定义编译配置文件
       run: |
         [ -e files ] && mv files immortalwrt/files
         [ -e $CONFIG_FILE ] && mv $CONFIG_FILE immortalwrt/.config
@@ -85,7 +85,7 @@ jobs:
         TELEGRAM_CHAT_ID: ${{ secrets.TELEGRAM_CHAT_ID }}
         TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
 
-    - name: Download package
+    - name: Download package 下载编译所需依赖文件
       id: package
       run: |
         cd immortalwrt
@@ -93,7 +93,7 @@ jobs:
         make download -j8
         find dl -size -1024c -exec ls -l {} \;
         find dl -size -1024c -exec rm -f {} \;
-    - name: Compile the firmware
+    - name: Compile the firmware 编译固件
       id: compile
       run: |
         cd immortalwrt
@@ -103,18 +103,18 @@ jobs:
         grep '^CONFIG_TARGET.*DEVICE.*=y' .config | sed -r 's/.*DEVICE_(.*)=y/\1/' > DEVICE_NAME
         [ -s DEVICE_NAME ] && echo "DEVICE_NAME=_$(cat DEVICE_NAME)" >> $GITHUB_ENV
         echo "FILE_DATE=_$(date +"%Y%m%d%H%M")" >> $GITHUB_ENV
-    - name: Check space usage
+    - name: Check space usage 核对空间占用
       if: (!cancelled())
       run: df -hT
 
-    - name: Upload bin directory
+    - name: Upload bin directory 上传bin目录
       uses: actions/upload-artifact@main
       if: steps.compile.outputs.status == 'success' && env.UPLOAD_BIN_DIR == 'true'
       with:
         name: ImmortalWrt_bin${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
         path: immortalwrt/bin
 
-    - name: Organize files
+    - name: Organize files 整理文件
       id: organize
       if: env.UPLOAD_FIRMWARE == 'true' && !cancelled()
       run: |
@@ -122,7 +122,7 @@ jobs:
         rm -rf packages
         echo "FIRMWARE=$PWD" >> $GITHUB_ENV
         echo "::set-output name=status::success"
-    - name: Upload firmware directory
+    - name: Upload firmware directory 上传固件目录
       uses: actions/upload-artifact@main
       if: steps.organize.outputs.status == 'success' && !cancelled()
       with:
@@ -145,7 +145,7 @@ jobs:
         ./transfer wet -s -p 16 --no-progress ${FIRMWARE} 2>&1 | tee wetransfer.log
         echo "::warning file=wetransfer.com::$(cat wetransfer.log | grep https)"
         echo "::set-output name=url::$(cat wetransfer.log | grep https | cut -f3 -d" ")"
-    - name: Generate release tag
+    - name: Generate release tag 生成Release标识
       id: tag
       if: env.UPLOAD_RELEASE == 'true' && !cancelled()
       run: |
@@ -154,7 +154,7 @@ jobs:
         [ $UPLOAD_COWTRANSFER = true ] && echo "🔗 [Cowtransfer](${{ steps.cowtransfer.outputs.url }})" >> release.txt
         [ $UPLOAD_WETRANSFER = true ] && echo "🔗 [WeTransfer](${{ steps.wetransfer.outputs.url }})" >> release.txt
         echo "::set-output name=status::success"
-    - name: Upload firmware to release
+    - name: Upload firmware to release 发布到Release
       uses: softprops/action-gh-release@v1
       if: steps.tag.outputs.status == 'success' && !cancelled()
       env:
@@ -164,7 +164,7 @@ jobs:
         body_path: release.txt
         files: ${{ env.FIRMWARE }}/*
 
-    - name: Delete workflow runs
+    - name: Delete workflow runs 清理工作空间
       uses: GitRML/delete-workflow-runs@main
       with:
         retain_days: 7
