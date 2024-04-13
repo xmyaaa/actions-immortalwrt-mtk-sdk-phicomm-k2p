@@ -123,8 +123,7 @@ jobs:
         if: steps.organize.conclusion == 'success' && !cancelled()
         with:
           name: OpenWrt_firmware${{ env.DEVICE_NAME }}${{ env.FILE_DATE }}
-          #path: ${{ env.FIRMWARE }}
-          path: openwrt/bin
+          path: ${{ env.FIRMWARE }}
 
       - name: Upload firmware to release
         uses: softprops/action-gh-release@v1
