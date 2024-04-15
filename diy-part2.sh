@@ -28,3 +28,10 @@ echo '替换golang到1.22.x'
 rm -rf feeds/packages/lang/golang
 git clone -b 22.x --single-branch https://github.com/sbwml/packages_lang_golang feeds/packages/lang/golang
 echo '=========Replace golang OK!========='
+
+echo '替换Passwall软件'
+rm -rf feeds/luci/applications/luci-app-passwall/*
+git clone -b main --single-branch https://github.com/xiaorouji/openwrt-passwall passwall
+mv passwall/luci-app-passwall/* feeds/luci/applications/luci-app-passwall/
+rm -rf passwall
+echo '=========Replace passwall source OK!========='
