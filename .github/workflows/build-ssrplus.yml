@@ -53,7 +53,8 @@ jobs:
       working-directory: /workdir
       run: |
         df -hT $PWD
-        git clone $REPO_URL -b $REPO_BRANCH immortalwrt
+        #git clone $REPO_URL -b $REPO_BRANCH immortalwrt
+        git clone https://github.com/XTLS/Xray-core.git
         ln -sf /workdir/immortalwrt $GITHUB_WORKSPACE/immortalwrt
 
     - name: Load custom feeds
